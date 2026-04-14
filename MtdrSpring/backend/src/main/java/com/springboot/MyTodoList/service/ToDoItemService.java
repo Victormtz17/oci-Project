@@ -59,11 +59,28 @@ public class ToDoItemService {
             toDoItem.setCreation_ts(td.getCreation_ts());
             toDoItem.setDescription(td.getDescription());
             toDoItem.setDone(td.isDone());
+            toDoItem.setActualHours(td.getActualHours());
             return toDoItemRepository.save(toDoItem);
         }else{
             return null;
         }
     }
-    
+
+    public ToDoItem completeTask(int id, double actualHours){
+        if (actualHours <= 0) {
+            return null;
+        }
+
+        Optional<ToDoItem> toDoItemData = toDoItemRepository.findById(id);
+        if(toDoItemData.isPresent()){
+            ToDoItem toDoItem = toDoItemData.get();
+            toDoItem.setDone(true);
+            toDoItem.setActualHours(actualHours);
+            return toDoItemRepository.save(toDoItem);
+        }else{
+            return null;
+        }
+    }
+
 
 }

@@ -20,14 +20,17 @@ public class ToDoItem {
     OffsetDateTime creation_ts;
     @Column(name = "done")
     boolean done;
+    @Column(name = "actual_hours")
+    Double actualHours;
     public ToDoItem(){
 
     }
-    public ToDoItem(int ID, String description, OffsetDateTime creation_ts, boolean done) {
+    public ToDoItem(int ID, String description, OffsetDateTime creation_ts, boolean done, Double actualHours) {
         this.ID = ID;
         this.description = description;
         this.creation_ts = creation_ts;
         this.done = done;
+        this.actualHours = actualHours;
     }
 
     public int getID() {
@@ -62,6 +65,14 @@ public class ToDoItem {
         this.done = done;
     }
 
+    public Double getActualHours() {
+        return actualHours;
+    }
+
+    public void setActualHours(Double actualHours) {
+        this.actualHours = actualHours;
+    }
+
     @Override
     public String toString() {
         return "ToDoItem{" +
@@ -69,6 +80,7 @@ public class ToDoItem {
                 ", description='" + description + '\'' +
                 ", creation_ts=" + creation_ts +
                 ", done=" + done +
+                ", actualHours=" + actualHours +
                 '}';
     }
 }

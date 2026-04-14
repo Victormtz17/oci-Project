@@ -6,6 +6,8 @@ import com.springboot.MyTodoList.service.ToDoItemService;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,7 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 public class BotActions{
 
     private static final Logger logger = LoggerFactory.getLogger(BotActions.class);
+    private static final Map<Long, Integer> pendingDoneByChat = new ConcurrentHashMap<>();
 
     String requestText;
     long chatId;
@@ -84,14 +87,54 @@ public class BotActions{
         Integer id = Integer.valueOf(done);
 
         try {
-
             ToDoItem item = todoService.getToDoItemById(id);
-            item.setDone(true);
-            todoService.updateToDoItem(id, item);
-            BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DONE.getMessage(), telegramClient);
+            if (item == null) {
+                BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DELETED.getMessage(), telegramClient);
+                exit = true;
+                return;
+            }
+            pendingDoneByChat.put(chatId, id);
+            BotHelper.sendMessageToTelegram(chatId, BotMessages.ASK_COMPLETION_HOURS.getMessage(), telegramClient);
 
         } catch (Exception e) {
             logger.error(e.getLocalizedMessage(), e);
+        }
+        exit = true;
+    }
+
+    public void fnCompleteTask() {
+        if (exit) {
+            return;
+        }
+
+        Integer pendingTaskId = pendingDoneByChat.get(chatId);
+        if (pendingTaskId == null) {
+            return;
+        }
+
+        double actualHours;
+        try {
+            actualHours = Double.parseDouble(requestText.trim());
+            if (actualHours <= 0) {
+                throw new NumberFormatException("actualHours must be greater than zero");
+            }
+        } catch (NumberFormatException ex) {
+            BotHelper.sendMessageToTelegram(chatId, BotMessages.INVALID_COMPLETION_HOURS.getMessage(), telegramClient);
+            exit = true;
+            return;
+        }
+
+        try {
+            ToDoItem completedItem = todoService.completeTask(pendingTaskId, actualHours);
+            if (completedItem == null) {
+                BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DELETED.getMessage(), telegramClient);
+            } else {
+                BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DONE.getMessage(), telegramClient);
+            }
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+        } finally {
+            pendingDoneByChat.remove(chatId);
         }
         exit = true;
     }
@@ -108,6 +151,7 @@ public class BotActions{
 
             ToDoItem item = todoService.getToDoItemById(id);
             item.setDone(false);
+            item.setActualHours(null);
             todoService.updateToDoItem(id, item);
             BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_UNDONE.getMessage(), telegramClient);
 
