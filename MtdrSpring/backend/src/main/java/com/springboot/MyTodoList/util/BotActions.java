@@ -80,7 +80,13 @@ public class BotActions{
     }
 
     public void fnDone() {
-        if (!(requestText.indexOf(BotLabels.DONE.getLabel()) != -1) || exit) 
+        if (exit)
+            return;
+
+        String normalized = requestText == null ? "" : requestText.trim().toUpperCase();
+        if (!normalized.contains(BotLabels.DONE.getLabel()))
+            return;
+        if (!requestText.contains(BotLabels.DASH.getLabel()))
             return;
             
         String done = requestText.substring(0, requestText.indexOf(BotLabels.DASH.getLabel()));
@@ -262,6 +268,18 @@ public class BotActions{
     public void fnElse(){
         if(exit)
             return;
+
+        String normalized = requestText == null ? "" : requestText.trim().toUpperCase();
+        if (normalized.startsWith("/")) {
+            return;
+        }
+        if (normalized.contains(BotLabels.DASH.getLabel())
+            && (normalized.contains(BotLabels.DONE.getLabel())
+                || normalized.contains(BotLabels.UNDO.getLabel())
+                || normalized.contains(BotLabels.DELETE.getLabel()))) {
+            return;
+        }
+
         ToDoItem newItem = new ToDoItem();
         newItem.setDescription(requestText);
         newItem.setCreation_ts(OffsetDateTime.now());
