@@ -63,7 +63,7 @@ public class ToDoItemBotController  implements SpringLongPollingBot, LongPolling
 		String messageTextFromTelegram = update.getMessage().getText();
 		long chatId = update.getMessage().getChatId();
 
-		BotActions actions =  new BotActions(telegramClient,toDoItemService,deepSeekService);
+		BotActions actions =  new BotActions(telegramClient,toDoItemService,deepSeekService, botProps.getActiveSprint());
 		actions.setRequestText(messageTextFromTelegram);
 		actions.setChatId(chatId);
 		if(actions.getTodoService()==null){
@@ -75,6 +75,7 @@ public class ToDoItemBotController  implements SpringLongPollingBot, LongPolling
 		actions.fnStart();
 		actions.fnDone();
 		actions.fnCompleteTask();
+		actions.fnSprint();
 		actions.fnUndo();
 		actions.fnDelete();
 		actions.fnHide();

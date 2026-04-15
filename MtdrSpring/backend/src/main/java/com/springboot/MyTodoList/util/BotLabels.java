@@ -7,6 +7,7 @@ public enum BotLabels {
 	LIST_ALL_ITEMS("List All Items"), 
 	ADD_NEW_ITEM("Add New Item"),
 	DONE("DONE"),
+	SPRINT("SPRINT"),
 	UNDO("UNDO"),
 	DELETE("DELETE"),
 	MY_TODO_LIST("MY TODO LIST"),

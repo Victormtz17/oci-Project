@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class BotProps {
     private String name;
     private String token;
+    private String activeSprint;
 
     public String getToken(){
 		return token;
@@ -17,11 +18,19 @@ public class BotProps {
 		return name;
 	}
 
+    public String getActiveSprint(){
+		return activeSprint;
+	}
+
     public void setToken(String tkn){
 		token = tkn;
 	}
 
     public void setName(String n){
 		name = n;
+	}
+
+    public void setActiveSprint(String sprint){
+		activeSprint = sprint;
 	}
 }

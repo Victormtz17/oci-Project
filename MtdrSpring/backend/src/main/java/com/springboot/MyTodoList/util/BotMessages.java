@@ -5,8 +5,9 @@ public enum BotMessages {
 	HELLO_MYTODO_BOT(
 	"Hello! I'm MyTodoList Bot!\nType a new todo item below and press the send button (blue arrow), or select an option below:"),
 	BOT_REGISTERED_STARTED("Bot registered and started succesfully!"),
-	ASK_COMPLETION_HOURS("BUILD-VERIFY-2026-04-14: send real worked hours for this task (example: 2 or 2.5)."),
+	ASK_COMPLETION_HOURS("send real worked hours for this task (example: 2 or 2.5)."),
 	INVALID_COMPLETION_HOURS("Invalid hours. Please send a positive number, example: 2.5"),
+	ITEM_ASSIGNED_SPRINT("Task assigned to active sprint and marked as IN_PROGRESS."),
 	ITEM_DONE("Task completed with actual hours! Select /todolist to return to the list of todo items, or /start to go to the main screen."), 
 	ITEM_UNDONE("Item undone! Select /todolist to return to the list of todo items, or /start to go to the main screen."), 
 	ITEM_DELETED("Item deleted! Select /todolist to return to the list of todo items, or /start to go to the main screen."),

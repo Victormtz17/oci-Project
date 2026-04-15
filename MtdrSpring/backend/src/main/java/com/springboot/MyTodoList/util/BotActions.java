@@ -19,19 +19,22 @@ public class BotActions{
 
     private static final Logger logger = LoggerFactory.getLogger(BotActions.class);
     private static final Map<Long, Integer> pendingDoneByChat = new ConcurrentHashMap<>();
+    private static final String IN_PROGRESS_TAG = "[IN_PROGRESS]";
 
     String requestText;
     long chatId;
     TelegramClient telegramClient;
     boolean exit;
+    String activeSprint;
 
     ToDoItemService todoService;
     DeepSeekService deepSeekService;
 
-    public BotActions(TelegramClient tc,ToDoItemService ts, DeepSeekService ds){
+    public BotActions(TelegramClient tc,ToDoItemService ts, DeepSeekService ds, String sprint){
         telegramClient = tc;
         todoService = ts;
         deepSeekService = ds;
+        activeSprint = sprint;
         exit  = false;
     }
 
@@ -145,6 +148,42 @@ public class BotActions{
         exit = true;
     }
 
+    public void fnSprint() {
+        if (exit) {
+            return;
+        }
+
+        String normalized = requestText == null ? "" : requestText.trim().toUpperCase();
+        if (!normalized.contains(BotLabels.SPRINT.getLabel())) {
+            return;
+        }
+        if (!requestText.contains(BotLabels.DASH.getLabel())) {
+            return;
+        }
+
+        String sprintAction = requestText.substring(0, requestText.indexOf(BotLabels.DASH.getLabel()));
+        Integer id = Integer.valueOf(sprintAction);
+
+        try {
+            ToDoItem item = todoService.getToDoItemById(id);
+            if (item == null) {
+                BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DELETED.getMessage(), telegramClient);
+                exit = true;
+                return;
+            }
+
+            // Keep task title clean by removing previous progress/sprint tags before assigning again.
+            String normalizedDescription = normalizeDescription(item.getDescription());
+            String updatedDescription = normalizedDescription + " " + IN_PROGRESS_TAG + " " + getSprintTag();
+            item.setDescription(updatedDescription.trim());
+            todoService.updateToDoItem(id, item);
+            BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_ASSIGNED_SPRINT.getMessage(), telegramClient);
+        } catch (Exception e) {
+            logger.error(e.getLocalizedMessage(), e);
+        }
+        exit = true;
+    }
+
     public void fnUndo() {
         if (requestText.indexOf(BotLabels.UNDO.getLabel()) == -1 || exit)
             return;
@@ -229,6 +268,7 @@ public class BotActions{
             KeyboardRow currentRow = new KeyboardRow();
             currentRow.add(item.getDescription());
             currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.DONE.getLabel());
+            currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.SPRINT.getLabel());
             keyboard.add(currentRow);
         }
 
@@ -276,7 +316,8 @@ public class BotActions{
         if (normalized.contains(BotLabels.DASH.getLabel())
             && (normalized.contains(BotLabels.DONE.getLabel())
                 || normalized.contains(BotLabels.UNDO.getLabel())
-                || normalized.contains(BotLabels.DELETE.getLabel()))) {
+                || normalized.contains(BotLabels.DELETE.getLabel())
+                || normalized.contains(BotLabels.SPRINT.getLabel()))) {
             return;
         }
 
@@ -304,6 +345,24 @@ public class BotActions{
 
         BotHelper.sendMessageToTelegram(chatId, "LLM: "+out, telegramClient, null);
 
+    }
+
+    private String getSprintTag() {
+        String sprintName = activeSprint;
+        if (sprintName == null || sprintName.trim().isEmpty()) {
+            sprintName = "Sprint-Default";
+        }
+        return "[SPRINT:" + sprintName.trim() + "]";
+    }
+
+    private String normalizeDescription(String description) {
+        if (description == null) {
+            return "";
+        }
+        // Replace old tags to avoid duplicates when task is reassigned.
+        String result = description.replaceAll("\\[SPRINT:[^\\]]*\\]", "");
+        result = result.replace(IN_PROGRESS_TAG, "");
+        return result.trim();
     }
 
 
