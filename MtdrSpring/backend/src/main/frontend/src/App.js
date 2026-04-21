@@ -37,15 +37,11 @@ function App() {
     const [error, setError] = useState();
 
     function deleteItem(deleteId) {
-      // console.log("deleteItem("+deleteId+")")
       fetch(API_LIST+"/"+deleteId, {
         method: 'DELETE',
       })
       .then(response => {
-        // console.log("response=");
-        // console.log(response);
         if (response.ok) {
-          // console.log("deleteItem FETCH call is ok");
           return response;
         } else {
           throw new Error('Something went wrong ...');
@@ -53,7 +49,7 @@ function App() {
       })
       .then(
         (result) => {
-          const remainingItems = items.filter(item => item.id !== deleteId);
+          const remainingItems = items.filter(item => item.taskId !== deleteId);
           setItems(remainingItems);
         },
         (error) => {
@@ -61,9 +57,9 @@ function App() {
         }
       );
     }
-    function toggleDone(event, id, description, done) {
+    function toggleDone(event, id, newStatus) {
       event.preventDefault();
-      modifyItem(id, description, done).then(
+      modifyItem(id, newStatus).then(
         (result) => { reloadOneIteam(id); },
         (error) => { setError(error); }
       );
@@ -80,10 +76,10 @@ function App() {
         .then(
           (result) => {
             const items2 = items.map(
-              x => (x.id === id ? {
+              x => (x.taskId === id ? {
                  ...x,
-                 'description':result.description,
-                 'done': result.done
+                 'description': result.description,
+                 'status': result.status
                 } : x));
             setItems(items2);
           },
@@ -91,9 +87,8 @@ function App() {
             setError(error);
           });
     }
-    function modifyItem(id, description, done) {
-      // console.log("deleteItem("+deleteId+")")
-      var data = {"description": description, "done": done};
+    function modifyItem(id, newStatus) {
+      var data = {"status": newStatus};
       return fetch(API_LIST+"/"+id, {
         method: 'PUT',
         headers: {
@@ -102,10 +97,7 @@ function App() {
         body: JSON.stringify(data)
       })
       .then(response => {
-        // console.log("response=");
-        // console.log(response);
         if (response.ok) {
-          // console.log("deleteItem FETCH call is ok");
           return response;
         } else {
           throw new Error('Something went wrong ...');
@@ -173,7 +165,7 @@ function App() {
       }).then(
         (result) => {
           var id = result.headers.get('location');
-          var newItem = {"id": id, "description": text}
+          var newItem = {"taskId": id, "description": text, "status": "TODO"}
           setItems([newItem, ...items]);
           setInserting(false);
         },
@@ -198,12 +190,11 @@ function App() {
         <table id="itemlistNotDone" className="itemlist">
           <TableBody>
           {items.map(item => (
-            !item.done && (
-            <tr key={item.id}>
-              <td className="description">{item.description}</td>
-              { /*<td>{JSON.stringify(item, null, 2) }</td>*/ }
+            item.status !== 'DONE' && (
+            <tr key={item.taskId}>
+              <td className="description">{item.title || item.description}</td>
               <td className="date"><Moment format="MMM Do hh:mm:ss">{item.createdAt}</Moment></td>
-              <td><Button variant="contained" className="DoneButton" onClick={(event) => toggleDone(event, item.id, item.description, !item.done)} size="small">
+              <td><Button variant="contained" className="DoneButton" onClick={(event) => toggleDone(event, item.taskId, 'DONE')} size="small">
                     Done
                   </Button></td>
             </tr>
@@ -216,15 +207,15 @@ function App() {
         <table id="itemlistDone" className="itemlist">
           <TableBody>
           {items.map(item => (
-            item.done && (
+            item.status === 'DONE' && (
 
-            <tr key={item.id}>
-              <td className="description">{item.description}</td>
+            <tr key={item.taskId}>
+              <td className="description">{item.title || item.description}</td>
               <td className="date"><Moment format="MMM Do hh:mm:ss">{item.createdAt}</Moment></td>
-              <td><Button variant="contained" className="DoneButton" onClick={(event) => toggleDone(event, item.id, item.description, !item.done)} size="small">
+              <td><Button variant="contained" className="DoneButton" onClick={(event) => toggleDone(event, item.taskId, 'TODO')} size="small">
                     Undo
                   </Button></td>
-              <td><Button startIcon={<DeleteIcon />} variant="contained" className="DeleteButton" onClick={() => deleteItem(item.id)} size="small">
+              <td><Button startIcon={<DeleteIcon />} variant="contained" className="DeleteButton" onClick={() => deleteItem(item.taskId)} size="small">
                     Delete
                   </Button></td>
             </tr>
