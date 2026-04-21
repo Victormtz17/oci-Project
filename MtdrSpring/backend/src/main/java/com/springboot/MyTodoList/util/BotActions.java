@@ -328,6 +328,7 @@ public class BotActions {
         newItem.setStatus("PENDING");
         newItem.setTaskStage("BACKLOG");
         newItem.setCreatedBy(BOT_USER_ID);
+        newItem.setIsDeleted("N");
         taskService.addTask(newItem);
 
         BotHelper.sendMessageToTelegram(chatId, BotMessages.NEW_ITEM_ADDED.getMessage(), telegramClient, null);
